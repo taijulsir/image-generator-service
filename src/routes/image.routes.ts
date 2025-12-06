@@ -69,6 +69,83 @@ router.post('/generate', authMiddleware, async (req: Request, res: Response) => 
     }
 });
 
+// Background image generation function
+const processImageInBackground = async (data: ImageRequest): Promise<void> => {
+    try {
+        Logger.info('Background: Starting image generation', { type: data.type, id: data.id });
+
+        // Get dimensions from env or use defaults
+        const width = parseInt(process.env.IMAGE_WIDTH || '1200', 10);
+        const height = parseInt(process.env.IMAGE_HEIGHT || '630', 10);
+
+        // Generate image
+        const imageBuffer = await imageGenerator.generateImage(data, width, height);
+
+        // Create filename
+        const fileName = `${data.type}-${data.id || Date.now()}.png`;
+
+        // Upload to DigitalOcean Spaces
+        const { url, key } = await storageService.uploadImage(imageBuffer, fileName);
+
+        // Save to database
+        const imageDoc = new Image({
+            imageKey: key,
+            url,
+            type: data.type,
+            metadata: {
+                id: data.id,
+                title: data.title,
+                gw: data.gw,
+            },
+        });
+        await imageDoc.save();
+
+        Logger.info('Background: Image generated and uploaded successfully', { key, url });
+    } catch (error: any) {
+        Logger.error('Background: Error generating image', { error: error.message, type: data.type, id: data.id });
+    }
+};
+
+// Async generate route - accepts data and processes in background
+router.post('/generate-async', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const data: ImageRequest = req.body;
+
+        // Validate request data
+        if (!data || !data.type || !data.data) {
+            res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'Invalid request data. Required fields: type, data',
+            } as ErrorResponse);
+            return;
+        }
+
+        Logger.info('Async: Received image generation request', { type: data.type, id: data.id });
+
+        // Start background processing (don't await)
+        processImageInBackground(data).catch(error => {
+            Logger.error('Background process error', { error: error.message });
+        });
+
+        // Immediately return success response
+        res.status(202).json({
+            success: true,
+            message: 'Image generation request accepted and processing in background',
+            type: data.type,
+            id: data.id,
+        });
+
+    } catch (error: any) {
+        Logger.error('Error accepting image generation request', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: 'Internal Server Error',
+            message: error.message || 'Failed to accept request',
+        } as ErrorResponse);
+    }
+});
+
 // Delete image route
 router.delete('/:imageKey(*)', authMiddleware, async (req: Request, res: Response) => {
     try {
