@@ -20,6 +20,12 @@ export interface GoalData {
     scorers: Scorer[];
 }
 
+export interface EventImageRequest {
+    event_id: number;
+    event_type: string;
+    fixture_id: number;
+}
+
 export interface ImageRequest {
     id: number;
     type: string;

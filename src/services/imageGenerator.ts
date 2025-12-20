@@ -1,15 +1,13 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Logger } from '../utils/logger';
 import { ImageRequest } from '../types';
+import { getGoalHtmlTemplate } from '../templates/goalTemplate';
 
 // Module-level state (functional style)
 let browserPool: Browser[] = [];
 let availableBrowsers: Browser[] = [];
 let poolSize: number = parseInt(process.env.BROWSER_POOL_SIZE || '3', 10);
 let isInitialized = false;
-const templateCache: Map<string, string> = new Map();
 
 async function initialize(size?: number): Promise<void> {
     if (isInitialized) return;
@@ -59,25 +57,12 @@ function releaseBrowser(browser: Browser): void {
     availableBrowsers.push(browser);
 }
 
-function loadTemplate(templateName: string): string {
-    if (templateCache.has(templateName)) {
-        return templateCache.get(templateName)!;
-    }
 
-    const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.html`);
-    const template = fs.readFileSync(templatePath, 'utf-8');
-    templateCache.set(templateName, template);
-    return template;
-}
-
-function injectData(template: string, data: ImageRequest): string {
-    return template.replace('{{DATA_PLACEHOLDER}}', JSON.stringify(data));
-}
 
 async function generateImage(
     data: ImageRequest,
-    width: number = 1200,
-    height: number = 630
+    width: number = 900,
+    height: number = 900
 ): Promise<Buffer> {
     if (!isInitialized) {
         await initialize();
@@ -89,20 +74,26 @@ async function generateImage(
     try {
         Logger.debug('Generating image', { type: data.type, id: data.id });
 
-        const template = loadTemplate('goal');
-        const html = injectData(template, data);
+        // Generate HTML content using the function-based template
+        const html = getGoalHtmlTemplate(data);
 
         page = await browser.newPage();
-        await page.setViewport({ width, height });
+        // Set deviceScaleFactor for higher resolution screenshots
+        await page.setViewport({ width, height, deviceScaleFactor: 2 });
 
         await page.setContent(html, {
-            waitUntil: ['networkidle0', 'load'],
+            waitUntil: ['networkidle0', 'domcontentloaded'],
+            timeout: 30000
         });
 
         // Allow fonts/images to settle
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        const screenshot = await page.screenshot({ type: 'png', fullPage: false });
+        const screenshot = await page.screenshot({
+            type: 'png',
+            fullPage: true, // Capture the full styled body
+            omitBackground: true
+        });
 
         Logger.info('Image generated successfully', { type: data.type, id: data.id });
         return screenshot as Buffer;
@@ -129,7 +120,7 @@ async function cleanup(): Promise<void> {
     browserPool = [];
     availableBrowsers = [];
     isInitialized = false;
-    templateCache.clear();
+
 
     Logger.info('Browser pool cleaned up');
 }

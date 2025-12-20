@@ -31,21 +31,21 @@ HEALTH_RESPONSE=$(curl -s "$BASE_URL/health")
 echo "$HEALTH_RESPONSE" | jq .
 echo ""
 
-# Test 2: Async Image Generation
+# Test 2: Synchronous Image Generation
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}Test 2: Async Image Generation (Recommended)${NC}"
+echo -e "${YELLOW}Test 2: Image Generation (Synchronous)${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "$ curl -X POST http://localhost:3000/api/images/generate-async \\"
+echo "$ curl -X POST http://localhost:3000/api/images/generate \\"
 echo "  -H \"Content-Type: application/json\" \\"
 echo "  -H \"auth_key: YOUR_KEY\" \\"
 echo "  -d @data.json"
 echo ""
-echo -e "${GREEN}⏱️  Measuring response time...${NC}"
+echo -e "${GREEN}🕒 Generating image (this handles concurrency via browser pool)...${NC}"
 echo ""
 
 START=$(date +%s%N)
-ASYNC_RESPONSE=$(curl -s -X POST "$BASE_URL/api/images/generate-async" \
+RESPONSE=$(curl -s -X POST "$BASE_URL/api/images/generate" \
   -H "Content-Type: application/json" \
   -H "auth_key: $AUTH_KEY" \
   -d @data.json)
@@ -53,49 +53,35 @@ END=$(date +%s%N)
 
 DURATION=$(( (END - START) / 1000000 ))
 
-echo "$ASYNC_RESPONSE" | jq .
-echo ""
-echo -e "${GREEN}✅ Response received in: ${DURATION}ms${NC}"
-echo -e "${GREEN}✅ Image is being generated in background${NC}"
+echo "$RESPONSE" | jq .
 echo ""
 
-# Test 3: Check Background Processing
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}Test 3: Background Processing Status${NC}"
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
-echo "Checking server logs for background processing..."
-echo ""
-sleep 2
+IMAGE_URL=$(echo "$RESPONSE" | jq -r '.imageUrl')
 
-# Show last few log lines
-if [ -f "logs/combined-$(date +%Y-%m-%d).log" ]; then
-    echo -e "${GREEN}Recent log entries:${NC}"
-    tail -n 5 "logs/combined-$(date +%Y-%m-%d).log" | grep -E "(Background|Image generated)" || echo "Processing..."
+if [ "$IMAGE_URL" != "null" ]; then
+    echo -e "${GREEN}✅ Success! Image URL: $IMAGE_URL${NC}"
+    echo -e "${GREEN}✅ Generation time: ${DURATION}ms${NC}"
 else
-    echo "Log file not found - check console output"
+    echo -e "${YELLOW}❌ Image generation failed. See response above.${NC}"
 fi
 
 echo ""
 
-# Test 4: List Generated Images
+# Test 3: List Generated Images
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}Test 4: List Generated Images${NC}"
+echo -e "${YELLOW}Test 3: List Generated Images${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo "$ curl -H \"auth_key: YOUR_KEY\" http://localhost:3000/api/images"
-echo ""
-echo "Waiting for background processing to complete..."
-sleep 10
 echo ""
 
 IMAGES_RESPONSE=$(curl -s -H "auth_key: $AUTH_KEY" "$BASE_URL/api/images")
 IMAGE_COUNT=$(echo "$IMAGES_RESPONSE" | jq -r '.count')
 LATEST_IMAGE=$(echo "$IMAGES_RESPONSE" | jq -r '.images[0]')
 
-echo "Total images: $IMAGE_COUNT"
+echo "Total images in DB: $IMAGE_COUNT"
 echo ""
-echo "Latest generated image:"
+echo "Latest generated image details:"
 echo "$LATEST_IMAGE" | jq '{
   type: .type,
   id: .metadata.id,

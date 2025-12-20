@@ -131,51 +131,7 @@ auth_key: your-secret-auth-key-here
 }
 ```
 
-### 2. Generate Image (Async - Recommended for External Servers)
-
-**POST** `/api/images/generate-async`
-
-This endpoint is designed for integration with external servers. It immediately returns a success response without waiting for image generation to complete. The image is processed in the background.
-
-**Use Case:** When another server sends image generation requests and doesn't want to wait for the processing to complete.
-
-**Headers:**
-```
-Content-Type: application/json
-auth_key: your-secret-auth-key-here
-```
-
-**Request Body:** Same as `/generate` endpoint
-
-**Response (Immediate - HTTP 202 Accepted):**
-```json
-{
-  "success": true,
-  "message": "Image generation request accepted and processing in background",
-  "type": "goal_mancity",
-  "id": 4
-}
-```
-
-**How it works:**
-1. Server receives the request
-2. Validates the data
-3. **Immediately returns success response** (doesn't wait)
-4. Processes image generation in background
-5. Uploads to DigitalOcean Spaces when complete
-6. Saves to database
-
-**Testing:**
-```bash
-curl -X POST http://localhost:3000/api/images/generate-async \
-  -H "Content-Type: application/json" \
-  -H "auth_key: your-secret-auth-key-here" \
-  -d @data.json
-```
-
-**Note:** Check server logs or database to verify when image generation completes.
-
-### 3. Delete Image
+### 2. Delete Image
 
 **DELETE** `/api/images/:imageKey`
 

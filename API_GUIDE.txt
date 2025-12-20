@@ -1,0 +1,404 @@
+================================================================================
+                    IMAGE GENERATION API DOCUMENTATION
+================================================================================
+
+BASE URL: http://your-domain.com
+PORT: 3000
+
+================================================================================
+AUTHENTICATION
+================================================================================
+
+All API endpoints require authentication using an API key.
+
+Method: Pass API key in request header
+
+Header Name: auth_key
+Header Value: your-secret-api-key-here
+
+Example:
+auth_key: image-generate-service-secret-key-57@@57
+
+
+================================================================================
+ENDPOINT: GENERATE IMAGE
+================================================================================
+
+URL: POST /api/images/generate
+
+Description: 
+Accepts image generation data, generates the image using a browser pool, 
+uploads it to DigitalOcean Spaces, and returns the public URL.
+This process is synchronous and will return once the image is ready.
+
+Response Time: 5-30 seconds (depending on image complexity and server load)
+Concurrent Support: Handled automatically via a browser instance pool.
+
+--------------------------------------------------------------------------------
+REQUEST HEADERS
+--------------------------------------------------------------------------------
+
+Content-Type: application/json
+auth_key: your-secret-api-key-here
+
+
+--------------------------------------------------------------------------------
+REQUEST BODY FORMAT
+--------------------------------------------------------------------------------
+
+{
+  "id": 4,
+  "type": "goal_mancity",
+  "title": "GOAL! Man City Vs ARS",
+  "gw": "7",
+  "data": {
+    "home_team": {
+      "name": "Manchester City",
+      "logo": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+      "short_name": "MCI"
+    },
+    "away_team": {
+      "name": "Arsenal",
+      "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+      "short_name": "ARS"
+    },
+    "team_win": "Manchester City",
+    "club_name": "Premier League",
+    "club_logo": "https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png",
+    "goals": 1,
+    "scorers": [
+      {
+        "name": "K. De Bruyne",
+        "minute": 34,
+        "type": "Left Foot"
+      }
+    ]
+  }
+}
+
+
+--------------------------------------------------------------------------------
+FIELD DESCRIPTIONS
+--------------------------------------------------------------------------------
+
+id              (number, required)   - Unique identifier for the image
+type            (string, required)   - Image type (e.g., "goal_mancity")
+title           (string, required)   - Image title
+gw              (string, required)   - Game week or round number
+data            (object, required)   - Image data containing team information
+
+data.home_team  (object, required)   - Home team information
+  - name        (string, required)   - Full team name
+  - logo        (string, required)   - Team logo URL
+  - short_name  (string, required)   - Team abbreviation (3 letters)
+
+data.away_team  (object, required)   - Away team information
+  - name        (string, required)   - Full team name
+  - logo        (string, required)   - Team logo URL
+  - short_name  (string, required)   - Team abbreviation (3 letters)
+
+data.team_win   (string, required)   - Name of winning team
+data.club_name  (string, required)   - League/competition name
+data.club_logo  (string, required)   - League logo URL
+data.goals      (number, required)   - Number of goals scored
+data.scorers    (array, required)    - Array of scorer objects
+
+Scorer Object:
+  - name        (string, required)   - Player name
+  - minute      (number, required)   - Goal minute
+  - type        (string, required)   - Goal type (e.g., "Left Foot")
+
+
+--------------------------------------------------------------------------------
+SUCCESS RESPONSE (HTTP 200 OK)
+--------------------------------------------------------------------------------
+
+{
+  "success": true,
+  "imageUrl": "https://your-bucket.sgp1.cdn.digitaloceanspaces.com/images/123456789-goal_mancity-4.png",
+  "imageKey": "images/123456789-goal_mancity-4.png",
+  "message": "Image generated and uploaded successfully"
+}
+
+
+--------------------------------------------------------------------------------
+ERROR RESPONSES
+--------------------------------------------------------------------------------
+
+400 Bad Request - Invalid data format:
+{
+  "success": false,
+  "error": "Bad Request",
+  "message": "Invalid request data. Required fields: type, data"
+}
+
+401 Unauthorized - Missing or invalid auth key:
+{
+  "success": false,
+  "error": "Unauthorized",
+  "message": "auth_key is required in headers or query parameters"
+}
+
+500 Internal Server Error:
+{
+  "success": false,
+  "error": "Internal Server Error",
+  "message": "Error message here"
+}
+
+
+================================================================================
+CURL EXAMPLE
+================================================================================
+
+curl -X POST http://your-domain.com/api/images/generate \
+  -H "Content-Type: application/json" \
+  -H "auth_key: your-secret-api-key-here" \
+  -d '{
+    "id": 4,
+    "type": "goal_mancity",
+    "title": "GOAL! Man City Vs ARS",
+    "gw": "7",
+    "data": {
+      "home_team": {
+        "name": "Manchester City",
+        "logo": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+        "short_name": "MCI"
+      },
+      "away_team": {
+        "name": "Arsenal",
+        "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+        "short_name": "ARS"
+      },
+      "team_win": "Manchester City",
+      "club_name": "Premier League",
+      "club_logo": "https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png",
+      "goals": 1,
+      "scorers": [
+        {
+          "name": "K. De Bruyne",
+          "minute": 34,
+          "type": "Left Foot"
+        }
+      ]
+    }
+  }'
+
+
+================================================================================
+INTEGRATION EXAMPLES
+================================================================================
+
+--------------------------------------------------------------------------------
+Node.js / JavaScript
+--------------------------------------------------------------------------------
+
+const axios = require('axios');
+
+const imageData = {
+  id: 4,
+  type: "goal_mancity",
+  title: "GOAL! Man City Vs ARS",
+  gw: "7",
+  data: {
+    home_team: {
+      name: "Manchester City",
+      logo: "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+      short_name: "MCI"
+    },
+    away_team: {
+      name: "Arsenal",
+      logo: "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+      short_name: "ARS"
+    },
+    team_win: "Manchester City",
+    club_name: "Premier League",
+    club_logo: "https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png",
+    goals: 1,
+    scorers: [
+      {
+        name: "K. De Bruyne",
+        minute: 34,
+        type: "Left Foot"
+      }
+    ]
+  }
+};
+
+async function generateImage() {
+  try {
+    const response = await axios.post(
+      'http://your-domain.com/api/images/generate',
+      imageData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'auth_key': 'your-secret-api-key-here'
+        }
+      }
+    );
+    
+    console.log('Success:', response.data.imageUrl);
+    
+  } catch (error) {
+    console.error('Error:', error.response.data);
+  }
+}
+
+generateImage();
+
+
+--------------------------------------------------------------------------------
+Python
+--------------------------------------------------------------------------------
+
+import requests
+import json
+
+image_data = {
+    "id": 4,
+    "type": "goal_mancity",
+    "title": "GOAL! Man City Vs ARS",
+    "gw": "7",
+    "data": {
+        "home_team": {
+            "name": "Manchester City",
+            "logo": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+            "short_name": "MCI"
+        },
+        "away_team": {
+            "name": "Arsenal",
+            "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+            "short_name": "ARS"
+        },
+        "team_win": "Manchester City",
+        "club_name": "Premier League",
+        "club_logo": "https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png",
+        "goals": 1,
+        "scorers": [
+            {
+                "name": "K. De Bruyne",
+                "minute": 34,
+                "type": "Left Foot"
+            }
+        ]
+    }
+}
+
+url = "http://your-domain.com/api/images/generate"
+headers = {
+    "Content-Type": "application/json",
+    "auth_key": "your-secret-api-key-here"
+}
+
+response = requests.post(url, json=image_data, headers=headers)
+
+if response.status_code == 200:
+    print("Image URL:", response.json().get('imageUrl'))
+else:
+    print("Error:", response.json())
+
+
+--------------------------------------------------------------------------------
+PHP
+--------------------------------------------------------------------------------
+
+<?php
+
+$imageData = [
+    'id' => 4,
+    'type' => 'goal_mancity',
+    'title' => 'GOAL! Man City Vs ARS',
+    'gw' => '7',
+    'data' => [
+        'home_team' => [
+            'name' => 'Manchester City',
+            'logo' => 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
+            'short_name' => 'MCI'
+        ],
+        'away_team' => [
+            'name' => 'Arsenal',
+            'logo' => 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
+            'short_name' => 'ARS'
+        ],
+        'team_win' => 'Manchester City',
+        'club_name' => 'Premier League',
+        'club_logo' => 'https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png',
+        'goals' => 1,
+        'scorers' => [
+            [
+                'name' => 'K. De Bruyne',
+                'minute' => 34,
+                'type' => 'Left Foot'
+            ]
+        ]
+    ]
+];
+
+$ch = curl_init('http://your-domain.com/api/images/generate');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'auth_key: your-secret-api-key-here'
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($imageData));
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+$result = json_decode($response, true);
+
+if ($httpCode == 200) {
+    echo "Image URL: " . $result['imageUrl'] . "\n";
+} else {
+    echo "Error: " . $result['message'] . "\n";
+}
+
+?>
+
+
+================================================================================
+HOW IT WORKS
+================================================================================
+
+1. Your server sends POST request with image data
+2. API validates the data
+3. API uses a browser pool to render the HTML template
+4. Image is generated (5-30 seconds)
+5. Image is uploaded to DigitalOcean Spaces
+6. Image record is saved to local database
+7. API returns the public image URL in the JSON response
+
+The browser pool handles concurrent requests by queuing them or processing 
+them in parallel depending on the BROWSER_POOL_SIZE configuration.
+
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+1. Response Time: 5-30 seconds (this endpoint waits for completion)
+2. Image Storage: Images are uploaded to DigitalOcean Spaces
+3. Public Access: The returned URL is publicly accessible
+4. Authentication: Always include auth_key in request headers
+5. Data Format: All fields are required as specified above
+6. Image URLs: Provide valid, accessible URLs for team and league logos
+
+
+================================================================================
+SUPPORT
+================================================================================
+
+For issues or questions:
+- Verify auth_key is correct
+- Ensure all required fields are included
+- Check that image URLs are valid and accessible
+- Verify server is running on correct port
+- Check server logs for detailed error messages
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

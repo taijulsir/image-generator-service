@@ -35,17 +35,17 @@ https://your-domain.com  # Production
 
 ## 🚀 Endpoints
 
-### 1. Generate Image (Async) - **Recommended**
+### 1. Generate Image
 
-Generate an image in the background without waiting for completion.
+Generate an image and wait for completion. Returns the image URL.
 
-**Endpoint:** `POST /api/images/generate-async`
+**Endpoint:** `POST /api/images/generate`
 
 **Authentication:** Required
 
-**Response Time:** < 1 second
+**Response Time:** 5-30 seconds
 
-**Use Case:** External server integration, bulk processing
+**Use Case:** Direct API calls, integration with other services where the URL is needed immediately.
 
 #### Request
 
@@ -130,13 +130,13 @@ auth_key: your-secret-api-key-here
 
 #### Response
 
-**Success (HTTP 202 Accepted):**
+**Success (HTTP 200 OK):**
 ```json
 {
   "success": true,
-  "message": "Image generation request accepted and processing in background",
-  "type": "goal_mancity",
-  "id": 4
+  "imageUrl": "https://your-bucket.sgp1.cdn.digitaloceanspaces.com/images/1765043961739-goal_mancity-4.png",
+  "imageKey": "images/1765043961739-goal_mancity-4.png",
+  "message": "Image generated and uploaded successfully"
 }
 ```
 
@@ -161,82 +161,6 @@ auth_key: your-secret-api-key-here
 #### cURL Example
 
 ```bash
-curl -X POST http://localhost:3000/api/images/generate-async \
-  -H "Content-Type: application/json" \
-  -H "auth_key: your-secret-api-key-here" \
-  -d '{
-    "id": 4,
-    "type": "goal_mancity",
-    "title": "GOAL! Man City Vs ARS",
-    "gw": "7",
-    "data": {
-      "home_team": {
-        "name": "Manchester City",
-        "logo": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
-        "short_name": "MCI"
-      },
-      "away_team": {
-        "name": "Arsenal",
-        "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
-        "short_name": "ARS"
-      },
-      "team_win": "Manchester City",
-      "club_name": "Premier League",
-      "club_logo": "https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png",
-      "goals": 1,
-      "scorers": [
-        {
-          "name": "K. De Bruyne",
-          "minute": 34,
-          "type": "Left Foot"
-        }
-      ]
-    }
-  }'
-```
-
-Or using a JSON file:
-
-```bash
-curl -X POST http://localhost:3000/api/images/generate-async \
-  -H "Content-Type: application/json" \
-  -H "auth_key: your-secret-api-key-here" \
-  -d @data.json
-```
-
----
-
-### 2. Generate Image (Sync)
-
-Generate an image and wait for completion. Returns the image URL.
-
-**Endpoint:** `POST /api/images/generate`
-
-**Authentication:** Required
-
-**Response Time:** 5-30 seconds
-
-**Use Case:** Testing, debugging, when you need the URL immediately
-
-#### Request
-
-Same format as async endpoint.
-
-#### Response
-
-**Success (HTTP 200 OK):**
-```json
-{
-  "success": true,
-  "imageUrl": "https://your-bucket.sgp1.cdn.digitaloceanspaces.com/images/1765043961739-goal_mancity-4.png",
-  "imageKey": "images/1765043961739-goal_mancity-4.png",
-  "message": "Image generated and uploaded successfully"
-}
-```
-
-#### cURL Example
-
-```bash
 curl -X POST http://localhost:3000/api/images/generate \
   -H "Content-Type: application/json" \
   -H "auth_key: your-secret-api-key-here" \
@@ -245,7 +169,7 @@ curl -X POST http://localhost:3000/api/images/generate \
 
 ---
 
-### 3. Delete Image
+### 2. Delete Image
 
 Delete an image from storage and database.
 
@@ -282,7 +206,7 @@ curl -X DELETE "http://localhost:3000/api/images/images/1765043961739-goal_manci
 
 ---
 
-### 4. List Images
+### 3. List Images
 
 Get a list of all generated images (for debugging).
 
@@ -330,7 +254,7 @@ curl -X GET http://localhost:3000/api/images \
 
 ---
 
-### 5. Health Check
+### 4. Health Check
 
 Check if the server is running (no authentication required).
 
@@ -357,88 +281,6 @@ curl http://localhost:3000/health
 
 ---
 
-## 📝 Complete Example
-
-### Step 1: Prepare Data
-
-Create a file `goal-data.json`:
-
-```json
-{
-  "id": 5,
-  "type": "goal_liverpool",
-  "title": "GOAL! Liverpool Vs Chelsea",
-  "gw": "15",
-  "data": {
-    "home_team": {
-      "name": "Liverpool",
-      "logo": "https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg",
-      "short_name": "LIV"
-    },
-    "away_team": {
-      "name": "Chelsea",
-      "logo": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg",
-      "short_name": "CHE"
-    },
-    "team_win": "Liverpool",
-    "club_name": "Premier League",
-    "club_logo": "https://brandlogos.net/wp-content/uploads/2021/10/Premier-League-logo-symbol.png",
-    "goals": 1,
-    "scorers": [
-      {
-        "name": "M. Salah",
-        "minute": 67,
-        "type": "Right Foot"
-      }
-    ]
-  }
-}
-```
-
-### Step 2: Send Request
-
-```bash
-curl -X POST http://localhost:3000/api/images/generate-async \
-  -H "Content-Type: application/json" \
-  -H "auth_key: your-secret-api-key-here" \
-  -d @goal-data.json
-```
-
-### Step 3: Get Response (Immediate)
-
-```json
-{
-  "success": true,
-  "message": "Image generation request accepted and processing in background",
-  "type": "goal_liverpool",
-  "id": 5
-}
-```
-
-### Step 4: Check Result (After ~10 seconds)
-
-```bash
-curl -X GET http://localhost:3000/api/images \
-  -H "auth_key: your-secret-api-key-here" \
-  | jq '.images[0]'
-```
-
-Response:
-```json
-{
-  "imageKey": "images/1765044123456-goal_liverpool-5.png",
-  "url": "https://your-bucket.sgp1.cdn.digitaloceanspaces.com/images/1765044123456-goal_liverpool-5.png",
-  "type": "goal_liverpool",
-  "metadata": {
-    "id": 5,
-    "title": "GOAL! Liverpool Vs Chelsea",
-    "gw": "15"
-  }
-}
-```
-
----
-
 ## 🔧 Integration Examples
 
 ### Node.js / JavaScript
@@ -449,7 +291,7 @@ const axios = require('axios');
 async function generateImage(goalData) {
   try {
     const response = await axios.post(
-      'http://localhost:3000/api/images/generate-async',
+      'http://localhost:3000/api/images/generate',
       goalData,
       {
         headers: {
@@ -459,9 +301,7 @@ async function generateImage(goalData) {
       }
     );
     
-    console.log('Request accepted:', response.data);
-    // Response: { success: true, message: "...", type: "...", id: ... }
-    
+    console.log('Image URL:', response.data.imageUrl);
   } catch (error) {
     console.error('Error:', error.response.data);
   }
@@ -474,7 +314,7 @@ async function generateImage(goalData) {
 import requests
 
 def generate_image(goal_data):
-    url = "http://localhost:3000/api/images/generate-async"
+    url = "http://localhost:3000/api/images/generate"
     headers = {
         "Content-Type": "application/json",
         "auth_key": "your-secret-api-key-here"
@@ -482,77 +322,19 @@ def generate_image(goal_data):
     
     response = requests.post(url, json=goal_data, headers=headers)
     
-    if response.status_code == 202:
-        print("Request accepted:", response.json())
+    if response.status_code == 200:
+        print("Image URL:", response.json().get('imageUrl'))
     else:
         print("Error:", response.json())
 ```
 
-### PHP
-
-```php
-<?php
-$goalData = [
-    'id' => 4,
-    'type' => 'goal_mancity',
-    'title' => 'GOAL! Man City Vs ARS',
-    'gw' => '7',
-    'data' => [
-        'home_team' => [
-            'name' => 'Manchester City',
-            'logo' => 'https://...',
-            'short_name' => 'MCI'
-        ],
-        // ... rest of data
-    ]
-];
-
-$ch = curl_init('http://localhost:3000/api/images/generate-async');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-    'auth_key: your-secret-api-key-here'
-]);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($goalData));
-
-$response = curl_exec($ch);
-$result = json_decode($response, true);
-
-echo "Request accepted: " . $result['message'];
-?>
-```
-
 ---
 
-## ⚠️ Error Codes
+## 📊 Rate Limits & Concurrency
 
-| Status Code | Error | Description |
-|-------------|-------|-------------|
-| 200 | OK | Request successful (sync endpoint) |
-| 202 | Accepted | Request accepted (async endpoint) |
-| 400 | Bad Request | Invalid data format or missing fields |
-| 401 | Unauthorized | Missing or invalid auth_key |
-| 404 | Not Found | Endpoint or resource not found |
-| 500 | Internal Server Error | Server error during processing |
-
----
-
-## 📊 Rate Limits
-
-- **Browser Pool Size:** 3 concurrent image generations
-- **Additional requests:** Queued automatically
-- **No hard rate limit:** Controlled by browser pool
-
----
-
-## 💡 Best Practices
-
-1. **Use Async Endpoint** for production integrations
-2. **Store image URLs** from database or logs
-3. **Handle errors** gracefully with try-catch
-4. **Use HTTPS** in production
-5. **Keep auth_key secure** - use environment variables
+- **Browser Pool Size:** Configurable in `.env` (`BROWSER_POOL_SIZE`). Default is 3.
+- **Concurrency:** Multiple requests are handled simultaneously using the browser pool. If all browsers are busy, requests are queued.
+- **No hard rate limit:** Controlled by the available hardware resources and browser pool size.
 
 ---
 
