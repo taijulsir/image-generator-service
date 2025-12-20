@@ -63,15 +63,16 @@ export const getGoalHtmlTemplate = (data: ImageRequest): string => {
         }
     </style>
 </head>
-<body class="w-[900px] h-[900px]"> <!-- Set body size explicitly for Puppeteer -->
+<body> <!-- Set body size explicitly for Puppeteer -->
 
     <div class="relative flex size-[900px] flex-col items-center justify-center  rounded"
          style="background-image: url('https://i.ibb.co.com/PZbFb8Mb/goal-background-design.png'); background-size: 100% 100%;"> 
     
         
         <!-- Top left back arrow / Logo -->
-        <div class="absolute top-0 left-8 flex w-26 h-26 items-center justify-center">
-             <img src="https://sportinerd.com/_next/static/media/logo_text_prod.7589e8ed.png" alt="">
+        <!-- Top left back arrow / Logo -->
+        <div class="absolute top-0 left-8 flex max-w-[200px] h-26 items-center justify-start mt-8">
+             <img src="https://sportinerd.com/_next/static/media/logo_text_prod.7589e8ed.png" alt="" class="h-10 object-contain">
         </div>
 
         <!-- Main winning team logo -->
