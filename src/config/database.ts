@@ -5,7 +5,13 @@ export const connectDatabase = async (): Promise<void> => {
     try {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/image-service';
 
-        await mongoose.connect(mongoUri);
+        const options = {
+            autoIndex: true,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        };
+
+        await mongoose.connect(mongoUri, options);
 
         Logger.info('MongoDB connected successfully', { uri: mongoUri.replace(/\/\/.*@/, '//***@') });
 
@@ -14,7 +20,11 @@ export const connectDatabase = async (): Promise<void> => {
         });
 
         mongoose.connection.on('disconnected', () => {
-            Logger.warn('MongoDB disconnected');
+            Logger.warn('MongoDB disconnected - attempting to reconnect...');
+        });
+
+        mongoose.connection.on('reconnected', () => {
+            Logger.info('MongoDB reconnected');
         });
 
     } catch (error) {
