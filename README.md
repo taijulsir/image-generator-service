@@ -53,7 +53,7 @@ A microservice for generating dynamic social media images for football events (G
 ### 1. Generate Image
 **POST** `/api/images/generate`
 
-Generates an image if the event type is `GOAL` or `OWN_GOAL`.
+Generates an image if the event type is `GOAL` or `OWNGOAL`.
 
 **Headers:**
 - `Content-Type: application/json`

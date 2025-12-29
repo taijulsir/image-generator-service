@@ -34,7 +34,7 @@ export const validateGenerateImageRequest = (body: any): ValidationResult => {
         };
     }
 
-    // Logic: Only proceed if event_type is 'GOAL' or 'OWN_GOAL'
+    // Logic: Only proceed if event_type is 'GOAL' or 'OWNGOAL'
     // Using case-insensitive check for reliability
     const normalizedEventType = event_type.toLowerCase();
     if (normalizedEventType !== 'goal' && normalizedEventType !== 'owngoal') {

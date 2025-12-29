@@ -70,7 +70,7 @@ async function findEventInFixture(db: any, fixture: any, eventId: number) {
     // Validate Event Type
     const eventTypeId = eventData.type_id;
     if (eventTypeId !== 14 && eventTypeId !== 15) {
-        // throw new Error('Event type might not be GOAL or OWN_GOAL');
+        // throw new Error('Event type might not be GOAL or OWNGOAL');
     }
 
     return eventData;
